@@ -95,6 +95,7 @@ echo "<script>alert('Data deleted');</script>";
                                 </table>
                             </div>
                         </div>
+                        </div>
                     </div>
                 </main>
   <?php include('../includes/footer.php');?>

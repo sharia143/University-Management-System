@@ -65,6 +65,7 @@ while($result=mysqli_fetch_array($query))
 <?php } ?>
 
                     </div>
+                    </div>
                 </main>
           <?php include('../includes/footer.php');?>
             </div>

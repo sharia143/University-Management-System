@@ -74,6 +74,7 @@
 <a class="navbar-brand" href="index.php"><img src="images/xlogo.png.pagespeed.ic.vap6Ukaf0i.png" alt=""></a>
 </div>
 </div>
+</div>
 <div class="navbar-collapse collapse">
 <ul class="nav navbar-nav">
 

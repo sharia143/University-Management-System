@@ -95,6 +95,7 @@ echo "<script>alert('Data deleted');</script>";
                                     </tbody>
                                 </table>
                             </div>
+                            </div>
                         </div>
                     </div>
                 </main>

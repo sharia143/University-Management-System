@@ -324,6 +324,7 @@ This calendar includes key dates for the admissions. Please note that dates are 
 </div>
 </div>
 </div>
+</div>
 </section>
 </div>
 <script src="js/jquery.min.js.pagespeed.jm.iDyG3vc4gw.js"></script>

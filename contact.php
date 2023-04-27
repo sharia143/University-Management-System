@@ -111,6 +111,7 @@ require_once "contact.php";
 		</div>
 		</div>
 		</div>
+		</div>
 		</li>
 		</ul>
 		</li>	

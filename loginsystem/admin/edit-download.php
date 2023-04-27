@@ -64,6 +64,7 @@ while($result=mysqli_fetch_array($query))
                                     </tbody>
                                 </table>
                             </div>
+                            </div>
                             </form>
                         </div>
 <?php } ?>

@@ -52,6 +52,7 @@ if (strlen($_SESSION['adminid']==0)) {
                                     </tbody>
                                 </table>
                             </div>
+                            </div>
                             </form>
                         </div>
 

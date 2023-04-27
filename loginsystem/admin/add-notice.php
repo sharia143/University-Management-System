@@ -56,6 +56,7 @@ if($msg)
                                     </tbody>
                                 </table>
                             </div>
+                            </div>
                             </form>
                         </div>
                     </div>

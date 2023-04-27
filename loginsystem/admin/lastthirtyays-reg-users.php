@@ -47,6 +47,7 @@ echo "<script>alert('Data deleted');</script>";
                                 <i class="fas fa-table me-1"></i>
                           Registered Users in Last 30 Days  Details
                             </div>
+                            </div>
                             <div class="card-body">
                                 <table id="datatablesSimple">
                                     <thead>

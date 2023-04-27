@@ -86,6 +86,7 @@ $ret=mysqli_query($con,"select * from users where (fname like '%$searchkey%' || 
                                 </table>
                             </div>
                         </div>
+                        </div>
                     </div>
                 </main>
   <?php include('../includes/footer.php');?>

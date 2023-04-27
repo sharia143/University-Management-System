@@ -8,6 +8,7 @@
                 <div class="input-group">
                  &nbsp;
                 </div>
+                </div>
             </form>
              <form class="d-none d-md-inline-block form-inline ms-auto me-0 me-md-5 my-5 my-md-0" method="post" action="search-result.php">
                 <div class="input-group">

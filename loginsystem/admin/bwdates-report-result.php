@@ -100,6 +100,7 @@ $tdate=$_POST['todate'];
                                     </tbody>
                                 </table>
                             </div>
+                            </div>
                         </div>
                     </div>
                 </main>

@@ -30,6 +30,7 @@
 <img src="images/site.gif" alt="" class="loader-site">
 </div>
 </div>
+</div>
 <div id="wrapper">
 <div class="topbar">
 <div class="container">

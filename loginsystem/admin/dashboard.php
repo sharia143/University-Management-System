@@ -94,6 +94,7 @@ $last30daysregusers=mysqli_num_rows($query3);
                                 </div>
                             </div>
                         </div>
+                        </div>
                    
                       
                     </div>

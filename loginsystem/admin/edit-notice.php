@@ -66,6 +66,7 @@ while($result=mysqli_fetch_array($query))
                             </div>
                             </form>
                         </div>
+                        </div>
 <?php } ?>
 
                     </div>

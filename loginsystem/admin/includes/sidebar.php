@@ -34,6 +34,7 @@
                             </a>
                         </div>
                     </div>
+                    </div>
                 
                 </nav>
             </div>

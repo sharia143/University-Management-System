@@ -70,6 +70,7 @@ exit();
 <a class="small" href="password-recovery.php">Forgot Password?</a>
 <button class="btn btn-primary" name="login" type="submit">Login</button>
 </div>
+</div>
 </form>
 </div>
                                     <div class="card-footer text-center py-3">
