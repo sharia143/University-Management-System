@@ -6,22 +6,39 @@ if (strlen($_SESSION['adminid']==0)) {
  // for  password change   
 if(isset($_POST['update']))
 {
-$oldpassword=md5($_POST['currentpassword']); 
-$newpassword=md5($_POST['newpassword']);
-$sql=mysqli_query($con,"SELECT password FROM admin where password='$oldpassword'");
-$num=mysqli_fetch_array($sql);
-if($num>0)
-{
-$adminid=$_SESSION['adminid'];
-$ret=mysqli_query($con,"update admin set password='$newpassword' where id='$adminid'");
-echo "<script>alert('Password Changed Successfully !!');</script>";
-echo "<script type='text/javascript'> document.location = 'change-password.php'; </script>";
-}
-else
-{
-echo "<script>alert('Old Password not match !!');</script>";
-echo "<script type='text/javascript'> document.location = 'change-password.php'; </script>";
-}
+    $oldpassword=$_POST['currentpassword']; 
+    $newpassword=$_POST['newpassword'];
+    $adminid=(int)$_SESSION['adminid'];
+    $storedPassword = null;
+
+    $stmt = mysqli_prepare($con, "SELECT password FROM admin WHERE id=? LIMIT 1");
+    if ($stmt) {
+        mysqli_stmt_bind_param($stmt, "i", $adminid);
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_bind_result($stmt, $dbPassword);
+        if (mysqli_stmt_fetch($stmt)) {
+            $storedPassword = $dbPassword;
+        }
+        mysqli_stmt_close($stmt);
+    }
+
+    if($storedPassword !== null && app_password_verify_compat($oldpassword, $storedPassword))
+    {
+        $newHash = app_password_hash($newpassword);
+        $updateStmt = mysqli_prepare($con, "UPDATE admin SET password=? WHERE id=?");
+        if ($updateStmt) {
+            mysqli_stmt_bind_param($updateStmt, "si", $newHash, $adminid);
+            mysqli_stmt_execute($updateStmt);
+            mysqli_stmt_close($updateStmt);
+        }
+        echo "<script>alert('Password Changed Successfully !!');</script>";
+        echo "<script type='text/javascript'> document.location = 'change-password.php'; </script>";
+    }
+    else
+    {
+        echo "<script>alert('Old Password not match !!');</script>";
+        echo "<script type='text/javascript'> document.location = 'change-password.php'; </script>";
+    }
 }
 
     

@@ -3,23 +3,45 @@ include_once('includes/config.php');
 // Code for login 
 if(isset($_POST['login']))
 {
-$password=$_POST['password'];
-$dec_password=$password;
-$useremail=$_POST['uemail'];
-$ret= mysqli_query($con,"SELECT id,fname FROM users WHERE email='$useremail' and password='$dec_password'");
-$num=mysqli_fetch_array($ret);
-if($num>0)
-{
+    $password = isset($_POST['password']) ? $_POST['password'] : '';
+    $useremail = isset($_POST['uemail']) ? trim($_POST['uemail']) : '';
+    $isAuthenticated = false;
+    $userId = null;
+    $firstName = '';
+    $storedPassword = '';
 
-$_SESSION['id']=$num['id'];
-$_SESSION['name']=$num['fname'];
-header("location:welcome.php");
+    $stmt = mysqli_prepare($con, "SELECT id,fname,password FROM users WHERE email=? LIMIT 1");
+    if ($stmt) {
+        mysqli_stmt_bind_param($stmt, "s", $useremail);
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_bind_result($stmt, $dbUserId, $dbFirstName, $dbPassword);
+        if (mysqli_stmt_fetch($stmt)) {
+            $userId = $dbUserId;
+            $firstName = $dbFirstName;
+            $storedPassword = $dbPassword;
+            $isAuthenticated = app_password_verify_compat($password, $storedPassword);
+        }
+        mysqli_stmt_close($stmt);
+    }
 
-}
-else
-{
-echo "<script>alert('Invalid username or password');</script>";
-}
+    if ($isAuthenticated) {
+        if (app_password_needs_upgrade($storedPassword)) {
+            $newHash = app_password_hash($password);
+            $updateStmt = mysqli_prepare($con, "UPDATE users SET password=? WHERE id=?");
+            if ($updateStmt) {
+                mysqli_stmt_bind_param($updateStmt, "si", $newHash, $userId);
+                mysqli_stmt_execute($updateStmt);
+                mysqli_stmt_close($updateStmt);
+            }
+        }
+
+        $_SESSION['id'] = $userId;
+        $_SESSION['name'] = $firstName;
+        header("location:welcome.php");
+        exit();
+    }
+
+    echo "<script>alert('Invalid username or password');</script>";
 }
 ?>
 

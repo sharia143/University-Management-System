@@ -1,52 +1,74 @@
 <?php
 include('includes/config.php');
-use PHPMailer\PHPMailer\PHPMailer; 
-use PHPMailer\PHPMailer\Exception; 
-  
+use PHPMailer\PHPMailer\PHPMailer;
+
 require 'vendor/autoload.php';
 
 $mail = new PHPMailer;
-if(isset($_POST['send'])){
+if (isset($_POST['send'])) {
+    $femail = isset($_POST['femail']) ? trim($_POST['femail']) : '';
+    $genericMessage = "If your email is registered, a password reset link has been sent.";
 
+    $userId = null;
+    $firstName = '';
+    $toEmail = '';
+    $stmt = mysqli_prepare($con, "SELECT id,fname,email FROM users WHERE email=? LIMIT 1");
+    if ($stmt) {
+        mysqli_stmt_bind_param($stmt, "s", $femail);
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_bind_result($stmt, $dbUserId, $dbFirstName, $dbEmail);
+        if (mysqli_stmt_fetch($stmt)) {
+            $userId = $dbUserId;
+            $firstName = $dbFirstName;
+            $toEmail = $dbEmail;
+        }
+        mysqli_stmt_close($stmt);
+    }
 
-$femail=$_POST['femail'];
+    if ($userId !== null && app_ensure_password_resets_table($con)) {
+        try {
+            $rawToken = bin2hex(random_bytes(32));
+        } catch (Exception $e) {
+            $rawToken = bin2hex(openssl_random_pseudo_bytes(32));
+        }
 
-$row1=mysqli_query($con,"select email,password,fname from users where email='$femail'");
-$row2=mysqli_fetch_array($row1);
-if($row2>0)
-{
-$toemail = $row2['email'];
-$fname = $row2['fname'];
-$subject = "Information about your password";
-$password=$row2['password'];
-$message = "Your password is ".$password;
-$mail->isSMTP();                            // Set mailer to use SMTP
-$mail->Host = 'smtp.gmail.com';             // Specify main and backup SMTP servers
-$mail->SMTPAuth = true;                     // Enable SMTP authentication
-$mail->Username = 'your gmail id here';    // SMTP username
-$mail->Password = 'your gmail password here'; // SMTP password
-$mail->SMTPSecure = 'tls';                  // Enable TLS encryption, `ssl` also accepted
-$mail->Port = 587;                          // TCP port to connect to
-$mail->setFrom('your gmail id here','your name here');
-$mail->addAddress($toemail);   // Add a recipient
-$mail->isHTML(true);  // Set email format to HTML
-$bodyContent=$message;
-$mail->Subject =$subject;
-$bodyContent = 'Dear'." ".$fname;
-$bodyContent .='<p>'.$message.'</p>';
-$mail->Body = $bodyContent;
-if(!$mail->send()) {
-echo  "<script>alert('Message could not be sent');</script>";
-echo 'Mailer Error: ' . $mail->ErrorInfo;
-} else {
-   echo  "<script>alert('Your Password has been sent Successfully');</script>";
-}
+        $tokenHash = hash('sha256', $rawToken);
+        $expiresAt = date('Y-m-d H:i:s', time() + 3600);
 
-}
-else
-{
-echo "<script>alert('Email not register with us');</script>";   
-}
+        $insertStmt = mysqli_prepare($con, "INSERT INTO password_resets(user_id,token_hash,expires_at) VALUES(?,?,?)");
+        if ($insertStmt) {
+            mysqli_stmt_bind_param($insertStmt, "iss", $userId, $tokenHash, $expiresAt);
+            $saved = mysqli_stmt_execute($insertStmt);
+            mysqli_stmt_close($insertStmt);
+
+            if ($saved) {
+                $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+                $host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : 'localhost';
+                $basePath = rtrim(str_replace('\\', '/', dirname($_SERVER['PHP_SELF'])), '/');
+                $resetUrl = $scheme . '://' . $host . $basePath . '/reset-password.php?token=' . urlencode($rawToken);
+
+                $mail->isSMTP();
+                $mail->Host = 'smtp.gmail.com';
+                $mail->SMTPAuth = true;
+                $mail->Username = 'your gmail id here';
+                $mail->Password = 'your gmail password here';
+                $mail->SMTPSecure = 'tls';
+                $mail->Port = 587;
+                $mail->setFrom('your gmail id here', 'University Project');
+                $mail->addAddress($toEmail);
+                $mail->isHTML(true);
+                $mail->Subject = "Password reset request";
+                $bodyContent = 'Dear ' . htmlspecialchars($firstName) . ',';
+                $bodyContent .= '<p>Click the link below to reset your password. This link expires in 1 hour.</p>';
+                $bodyContent .= '<p><a href="' . htmlspecialchars($resetUrl) . '">' . htmlspecialchars($resetUrl) . '</a></p>';
+                $bodyContent .= '<p>If you did not request this, you can ignore this email.</p>';
+                $mail->Body = $bodyContent;
+                $mail->send();
+            }
+        }
+    }
+
+    echo "<script>alert('" . $genericMessage . "');</script>";
 }
 ?>
 <!DOCTYPE html>
@@ -75,7 +97,7 @@ echo "<script>alert('Email not register with us');</script>";
 <h3 class="text-center font-weight-light my-4">Password Recovery</h3></div>
 <div class="card-body">
 
-<div class="small mb-3 text-muted">Enter your email address and we will send you password on your email</div>
+<div class="small mb-3 text-muted">Enter your email address and we will send you a password reset link.</div>
 
 
 <form method="post">
@@ -87,7 +109,7 @@ echo "<script>alert('Email not register with us');</script>";
 
 <div class="d-flex align-items-center justify-content-between mt-4 mb-0">
 <a class="small" href="login.php">Return to login</a>
-<button class="btn btn-primary" type="submit" name="send">Reset Password</button>
+<button class="btn btn-primary" type="submit" name="send">Send Reset Link</button>
 </div>
                                         </form>
                                     </div>

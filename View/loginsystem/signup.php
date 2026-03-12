@@ -8,21 +8,45 @@ if(isset($_POST['submit']))
     $lname=$_POST['lname'];
     $email=$_POST['email'];
     $password=$_POST['password'];
+    $confirmPassword = $_POST['confirmpassword'];
     $contact=$_POST['contact'];
-$sql=mysqli_query($con,"select id from users where email='$email'");
-$row=mysqli_num_rows($sql);
-if($row>0)
-{
-    echo "<script>alert('Email id already exist with another account. Please try with other email id');</script>";
-} else{
-    $msg=mysqli_query($con,"insert into users(fname,lname,email,password,contactno) values('$fname','$lname','$email','$password','$contact')");
 
-if($msg)
-{
-    echo "<script>alert('Registered successfully');</script>";
-    echo "<script type='text/javascript'> document.location = 'login.php'; </script>";
-}
-}
+    if ($password !== $confirmPassword) {
+        echo "<script>alert('Password and Confirm Password do not match.');</script>";
+    } else {
+        $row = 0;
+        $checkStmt = mysqli_prepare($con, "SELECT id FROM users WHERE email=? LIMIT 1");
+        if ($checkStmt) {
+            mysqli_stmt_bind_param($checkStmt, "s", $email);
+            mysqli_stmt_execute($checkStmt);
+            mysqli_stmt_store_result($checkStmt);
+            $row = mysqli_stmt_num_rows($checkStmt);
+            mysqli_stmt_close($checkStmt);
+        }
+
+        if($row>0)
+        {
+            echo "<script>alert('Email id already exist with another account. Please try with other email id');</script>";
+        } else{
+            $passwordHash = app_password_hash($password);
+            $insertStmt = mysqli_prepare($con, "INSERT INTO users(fname,lname,email,password,contactno) VALUES(?,?,?,?,?)");
+            if ($insertStmt) {
+                mysqli_stmt_bind_param($insertStmt, "sssss", $fname, $lname, $email, $passwordHash, $contact);
+                $msg = mysqli_stmt_execute($insertStmt);
+                mysqli_stmt_close($insertStmt);
+
+                if($msg)
+                {
+                    echo "<script>alert('Registered successfully');</script>";
+                    echo "<script type='text/javascript'> document.location = 'login.php'; </script>";
+                } else {
+                    echo "<script>alert('Registration failed. Please try again.');</script>";
+                }
+            } else {
+                echo "<script>alert('Registration failed. Please try again.');</script>";
+            }
+        }
+    }
 }
 ?><!DOCTYPE html>
 <html lang="en">
