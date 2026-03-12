@@ -3,25 +3,46 @@ include_once('../includes/config.php');
 // Code for login 
 if(isset($_POST['login']))
 {
-  $adminusername=$_POST['username'];
-  $pass=md5($_POST['password']);
-$ret=mysqli_query($con,"SELECT * FROM admin WHERE username='$adminusername' and password='$pass'");
-$num=mysqli_fetch_array($ret);
-if($num>0)
-{
-$extra="dashboard.php";
-$_SESSION['login']=$_POST['username'];
-$_SESSION['adminid']=$num['id'];
-echo "<script>window.location.href='".$extra."'</script>";
-exit();
-}
-else
-{
-echo "<script>alert('Invalid username or password');</script>";
-$extra="index.php";
-echo "<script>window.location.href='".$extra."'</script>";
-exit();
-}
+  $adminusername = isset($_POST['username']) ? trim($_POST['username']) : '';
+  $password = isset($_POST['password']) ? $_POST['password'] : '';
+  $adminId = null;
+  $storedPassword = '';
+
+  $stmt = mysqli_prepare($con, "SELECT id,password FROM admin WHERE username=? LIMIT 1");
+  if ($stmt) {
+    mysqli_stmt_bind_param($stmt, "s", $adminusername);
+    mysqli_stmt_execute($stmt);
+    mysqli_stmt_bind_result($stmt, $dbAdminId, $dbPassword);
+    if (mysqli_stmt_fetch($stmt)) {
+      $adminId = $dbAdminId;
+      $storedPassword = $dbPassword;
+    }
+    mysqli_stmt_close($stmt);
+  }
+
+  if($adminId !== null && app_password_verify_compat($password, $storedPassword))
+  {
+    if (app_password_needs_upgrade($storedPassword)) {
+      $newHash = app_password_hash($password);
+      $updateStmt = mysqli_prepare($con, "UPDATE admin SET password=? WHERE id=?");
+      if ($updateStmt) {
+        mysqli_stmt_bind_param($updateStmt, "si", $newHash, $adminId);
+        mysqli_stmt_execute($updateStmt);
+        mysqli_stmt_close($updateStmt);
+      }
+    }
+
+    $extra="dashboard.php";
+    $_SESSION['login']=$adminusername;
+    $_SESSION['adminid']=$adminId;
+    echo "<script>window.location.href='".$extra."'</script>";
+    exit();
+  }
+
+  echo "<script>alert('Invalid username or password');</script>";
+  $extra="index.php";
+  echo "<script>window.location.href='".$extra."'</script>";
+  exit();
 }
 ?>
 
